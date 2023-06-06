@@ -1,0 +1,62 @@
+body {
+  /* background-color: rebeccapurple; */
+}
+
+.bt-modal[open] {
+  pointer-events: auto;
+  visibility: visible;
+  opacity: 1;
+  border-radius: 10pt;
+  box-shadow: #00000040 0 25px 50px -12px;
+  overscroll-behavior: contain;
+  overflow-y: hidden;
+  border: none;
+  padding: 2.5rem;
+}
+
+.bt-modal-box {
+  overscroll-behavior: contain;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.bt-btn-close {
+  position: absolute;
+  width: 2rem;
+  height: 2rem;
+  background-color: #D4B57B;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  right: 1rem;
+  top: 1rem;
+  box-shadow: #00000040 0 25px 50px -12px;
+}
+
+.bt-title {
+  text-align: center;
+  margin-bottom: 0;
+}
+
+.bt-description {
+  margin-bottom: 0;
+}
+
+.bt-coupon {
+  font-size: 20px;
+  background-color: #D4B57B;
+  padding: 1.5rem 1rem;
+  line-height: 0;
+  display: flex;
+  width: fit-content;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+  font-weight: 900;
+  text-transform: uppercase;
+}
