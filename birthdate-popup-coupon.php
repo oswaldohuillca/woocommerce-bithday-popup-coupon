@@ -26,16 +26,20 @@ defined('ABSPATH') || exit;
 define('COUPON_EXPIRY_DATE', 'coupon_expiry_date');
 define('COUPON_CODE', 'coupon_code');
 define('COUPON_ID', 'coupon_id');
+define('BILLING_DNI', 'billing_dni');
+define('BILLING_BIRTH_DATE', 'billing_birth_date');
 
 define('COUPON_AMOUNT', 15);
 define('DISCOUNT_TYPE', 'percent');
+
+require_once __DIR__ . '/customer.php';
 
 function bt_script_registro()
 {
   // wp_register_style('bt-daysi-ui', 'https://cdn.jsdelivr.net/npm/daisyui@3.0.0/dist/full.css');
   wp_register_style("bt-registro", plugins_url('/assets/index.css', __FILE__));
-  wp_register_script("confetti-js", 'https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js');
-  wp_register_script("bt-registro", plugins_url('/assets/index.js', __FILE__), ['confetti-js']);
+  // wp_register_script("confetti-js", 'https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js');
+  wp_register_script("bt-registro", plugins_url('/assets/index.js', __FILE__));
 
   wp_enqueue_style('bt-registro');
   wp_enqueue_script("bt-registro");
@@ -121,74 +125,85 @@ function bt_create_custom_coupon($code, $coupon_amount, $discount_type, $usage_l
 
 function bt_render_popup_html()
 {
-  $user_id = get_current_user_id();
-  if ($user_id == 0) return;
+  get_customer(function ($customer) { // Obtenemos el cliente
 
-  $client = new WC_Customer($user_id);
+    $customer_id = $customer->get_id(); // Obtenemos el ID del cliente
 
-  // si no existe el cliente retorna
-  if (!$client) return;
+    get_customer_birthdate($customer_id, function ($customer_birthday)  use ($customer_id) { // Obtenemos cumpleaños del cliente
 
-  // validamos si el cliente es de rol customer
-  if ($client->get_role() !== 'customer') return;
+      $coupon_expiry_date = get_user_meta($customer_id, COUPON_EXPIRY_DATE, true);
+      $coupon_code = get_user_meta($customer_id, COUPON_CODE, true);
 
-  // obtenemos el cumpleaños del Cliente
-  $client_birthday = get_user_meta($client->get_id(), 'billing_birthday', true);
-  $coupon_expiry_date = get_user_meta($client->get_id(), COUPON_EXPIRY_DATE, true);
-  $coupon_code = get_user_meta($client->get_id(), COUPON_CODE, true);
-
-  // si no existe fecha de nacimiento del cliente retorna
-  if (!$client_birthday) return;
-
-  // validamos si existe el cupon
-  // si no existe eliminados los metadatos del usuario
-  $obj_coupon_code = new WC_Coupon($coupon_code);
-  if (!$obj_coupon_code->get_id()) {
-    deleteUserMetaCoupon($user_id);
-  }
-
-  $coupon_code = get_user_meta($client->get_id(), COUPON_CODE, true);
-
-  // obtenemos el mes actual en numero
-  $current_month = date('m');
-  $current_minute = date('i');
-  $client_month_birth = date('m', strtotime($client_birthday));
-  $last_date = date('Y-m-t', strtotime($client_birthday));
-
-  // Si la mes actual NO es igual al mes de cumpleaños del cliente retorna.
-  if ($current_month !== $client_month_birth) {
-    // Eliminanos el cupon para no tener relleno en la base de datos
-    if (!empty($coupon_code)) {
+      // validamos si existe el cupon
+      // si no existe eliminados los metadatos del usuario
       $obj_coupon_code = new WC_Coupon($coupon_code);
-      if (!empty($obj_coupon_code->get_id())) {
-        wp_delete_post($obj_coupon_code->get_id());
+      if (!$obj_coupon_code->get_id()) {
+        deleteUserMetaCoupon($customer_id);
       }
-    }
-    // Eliminanos metadatos del usuario para no tener relleno en la base de datos
-    deleteUserMetaCoupon($user_id);
-    return;
-  };
+
+      $coupon_code = get_user_meta($customer_id, COUPON_CODE, true);
+
+      // obtenemos el mes actual en numero
+      $current_month = date('m');
+      $current_minute = date('i');
+      $client_month_birth = date('m', strtotime($customer_birthday));
+      $last_date = date('Y-m-t', strtotime($customer_birthday));
+
+      // Si la mes actual NO es igual al mes de cumpleaños del cliente retorna.
+      if ($current_month !== $client_month_birth) {
+        // Eliminanos el cupon para no tener relleno en la base de datos
+        if (!empty($coupon_code)) {
+          $obj_coupon_code = new WC_Coupon($coupon_code);
+          if (!empty($obj_coupon_code->get_id())) {
+            wp_delete_post($obj_coupon_code->get_id());
+          }
+        }
+        // Eliminanos metadatos del usuario para no tener relleno en la base de datos
+        deleteUserMetaCoupon($customer_id);
+        return;
+      };
+
+      // validamos si existe el tiempo de expiracion y si el timestamp actual es menor al timestamp de la expiracion del cupón
+      // si esto es verdad indica que aun esta en dentro del mes de su cumpleaños
+      if ($coupon_code && $coupon_expiry_date && time() < intval($coupon_expiry_date)) {
+        bt_render_modal($coupon_code);
+        return;
+      }
 
 
-  // validamos si existe el tiempo de expiracion y si el timestamp actual es menor al timestamp de la expiracion del cupón
-  // si esto es verdad indica que aun esta en dentro del mes de su cumpleaños
-  if ($coupon_code && $coupon_expiry_date && time() < intval($coupon_expiry_date)) {
-    bt_render_modal($coupon_code);
-    return;
-  }
+      $codigo = "happy{$current_month}{$current_minute}";
+      $cantidadMaxima = 0;
+      $expirationDate = $last_date;
 
+      $coupon_id = bt_create_custom_coupon($codigo, COUPON_AMOUNT, DISCOUNT_TYPE, $cantidadMaxima, $expirationDate, $customer_id);
 
-
-
-
-  $codigo = "happy{$current_month}{$current_minute}";
-  $cantidadMaxima = 0;
-  $expirationDate = $last_date;
-
-  $coupon_id = bt_create_custom_coupon($codigo, COUPON_AMOUNT, DISCOUNT_TYPE, $cantidadMaxima, $expirationDate, $user_id);
-
-  bt_render_modal($codigo);
+      bt_render_modal($codigo);
+    });
+  });
 }
 
 
 add_action('wp_footer', 'bt_render_popup_html');
+
+
+
+
+function validate_customer_coupun($passed, $coupon)
+{
+  get_customer(function ($customer) use ($coupon, $passed) {
+
+    $customer_id = $customer->get_id();
+
+    $billing_dni = get_user_meta($customer_id, BILLING_DNI, true);
+
+    $coupon_code = $coupon->get_code();
+    if (strlen($coupon_code) < 10) {
+      $passed = false;
+      wc_add_notice('El cupón debe tener al menos 6 letras.', 'error');
+    }
+    return $passed;
+  });
+
+  return $passed;
+}
+add_filter('woocommerce_coupon_is_valid', 'validate_customer_coupun', 10, 2);
