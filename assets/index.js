@@ -49,3 +49,5 @@ const handleCloseButtonModal = (modal, callback) => {
   btnClose.addEventListener('click', callback)
 }
 
+
+
