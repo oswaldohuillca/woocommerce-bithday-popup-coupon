@@ -64,11 +64,11 @@ function bt_render_modal($coupon_code)
 
       <div class="box-content">
 
-        <h3 class="bt-title">¡CELEBRAMOS <br> TODO EL MES!</h3>
+        <h3 class="bt-title">¡TU CUMPLEAÑOS <br> TODO EL MES!</h3>
 
         <div class="box-text">
           <p class="bt-description">
-            ¡FELIZ CUMPLEAÑOS! <br>
+            Te regalamos un 15% de descuento <br>
             Ingresa desde tu cuenta y escribe el cupon:
           </p>
           <a href="#" class="bt-coupon"> <?= $coupon_code ?></a>
