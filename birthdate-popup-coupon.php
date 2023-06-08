@@ -38,8 +38,8 @@ function bt_script_registro()
 {
   // wp_register_style('bt-daysi-ui', 'https://cdn.jsdelivr.net/npm/daisyui@3.0.0/dist/full.css');
   wp_register_style("bt-registro", plugins_url('/assets/index.css', __FILE__));
-  // wp_register_script("confetti-js", 'https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js');
-  wp_register_script("bt-registro", plugins_url('/assets/index.js', __FILE__));
+  wp_register_script("confetti-js", 'https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js');
+  wp_register_script("bt-registro", plugins_url('/assets/index.js', __FILE__), ['confetti-js']);
 
   wp_enqueue_style('bt-registro');
   wp_enqueue_script("bt-registro");
@@ -62,17 +62,25 @@ function bt_render_modal($coupon_code)
 
       </button>
 
-      <h3 class="bt-title">!Felicidades!</h3>
-      <p class="bt-description">
-        Tienes un <b>CUPÓN</b> de cumpleaños para usar todo este mes.
-      </p>
-      <a href="#" class="bt-coupon"> <?= $coupon_code ?></a>
+      <div class="box-content">
+
+        <h3 class="bt-title">!CELEBRAMOS <br> TODO EL MES!</h3>
+
+        <div class="box-text">
+          <p class="bt-description">
+            ¡FELIZ CUMPLEAÑOS! <br>
+            Ingresa desde tu cuenta y escribe el cupon:
+          </p>
+          <a href="#" class="bt-coupon"> <?= $coupon_code ?></a>
+        </div>
+      </div>
+
     </form>
   </dialog>
 <?php
 }
 
-
+//Sirve para la eliminacion del cupon
 function deleteUserMetaCoupon($user_id)
 {
   delete_user_meta($user_id, COUPON_EXPIRY_DATE);
@@ -129,7 +137,7 @@ function bt_render_popup_html()
 
     $customer_id = $customer->get_id(); // Obtenemos el ID del cliente
 
-    get_customer_birthdate($customer_id, function ($customer_birthday)  use ($customer_id) { // Obtenemos cumpleaños del cliente
+    get_customer_birthdate($customer_id, function ($customer_birthday) use ($customer_id) { // Obtenemos cumpleaños del cliente
 
       $coupon_expiry_date = get_user_meta($customer_id, COUPON_EXPIRY_DATE, true);
       $coupon_code = get_user_meta($customer_id, COUPON_CODE, true);
@@ -171,7 +179,7 @@ function bt_render_popup_html()
       }
 
 
-      $codigo = "happy{$current_month}{$current_minute}";
+      $codigo = "feliz{$current_month}{$current_minute}";
       $cantidadMaxima = 0;
       $expirationDate = $last_date;
 
@@ -203,7 +211,6 @@ function validate_customer_coupun($passed, $coupon)
     }
     return $passed;
   });
-
-  return $passed;
 }
-add_filter('woocommerce_coupon_is_valid', 'validate_customer_coupun', 10, 2);
+
+// add_filter('woocommerce_coupon_is_valid', 'validate_customer_coupun', 10, 2);
