@@ -155,7 +155,13 @@ function bt_render_popup_html()
       $current_month = date('m');
       $current_minute = date('i');
       $client_month_birth = date('m', strtotime($customer_birthday));
-      $last_date = date('Y-m-t', strtotime($customer_birthday));
+      // $last_date = date('Y-m-t', strtotime($customer_birthday));
+
+      $diff = time() - strtotime($customer_birthday);
+      $current_coupon_expiry_date = strtotime($customer_birthday) + $diff; // Formato timestamp
+      $last_date = date('Y-m-t', $current_coupon_expiry_date);
+
+      // echo "Fecha de cumpleaños del cliente: $last_date: $current_coupon_expiry_date";
 
       // Si la mes actual NO es igual al mes de cumpleaños del cliente retorna.
       if ($current_month !== $client_month_birth) {
@@ -173,7 +179,7 @@ function bt_render_popup_html()
 
       // validamos si existe el tiempo de expiracion y si el timestamp actual es menor al timestamp de la expiracion del cupón
       // si esto es verdad indica que aun esta en dentro del mes de su cumpleaños
-      if ($coupon_code && $coupon_expiry_date && time() < intval($coupon_expiry_date)) {
+      if (($coupon_code && $coupon_expiry_date) && (time() < intval($coupon_expiry_date))) {
         bt_render_modal($coupon_code);
         return;
       }
